@@ -1,8 +1,7 @@
 
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware
-
-
+from MER.services import fer_model
 from MER.routers.ser import router as ser
 
 

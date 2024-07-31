@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from MER.services.test_model import find_emotion
 import shutil
 import os
-
+from MER.services.speech_to_text_whisper import get_text
 
 router=APIRouter(tags=["SER"],prefix="/ser")
 
@@ -32,6 +32,11 @@ def recorde_audioasync(file: UploadFile = File(...)):
     return find_emotion()
 
 
+
+
+@router.get("/get-text")
+def html_page():
+    return get_text() 
 
 @router.get("/record-speech")
 def html_page():

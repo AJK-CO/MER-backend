@@ -56,8 +56,9 @@
     <h1>Audio Recorder</h1>
     <button id="recordButton">Record</button>
     <button id="stopButton" disabled>Stop</button>
-    <audio id="audioPlayback" controls></audio>
-    <div id="response"></div>
+    <audio id="audioPlayback" controls></audio></br>
+    <div id="response"></div></br>
+    <div id="text"></div>
 
     <!-- Include the extendable-media-recorder library -->
     <script type="module">
@@ -106,10 +107,25 @@
                             method: 'POST',
                             body: formData,
                         });
-
+                        
                         const result = await response.json();
                         // Display the response
                         document.getElementById('response').innerText = JSON.stringify(result, null, 2);
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        document.getElementById('response').innerText = 'An error occurred while sending the audio.';
+                    }
+
+                    try {
+                        const response = await fetch('http://localhost:8000/ser/get-text', {
+                            method: 'GET'
+                        });
+                        
+                        const result = await response.json();
+                        // Display the response
+                        document.getElementById('text').innerText = JSON.stringify(result, null, 2);
+                        
                     } catch (error) {
                         console.error('Error:', error);
                         document.getElementById('response').innerText = 'An error occurred while sending the audio.';

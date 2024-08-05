@@ -33,14 +33,13 @@ def recorde_audioasync(file: UploadFile = File(...)):
 
 
 
-
 @router.get("/get-text")
 def html_page():
     return get_text() 
 
-@router.get("/record-speech")
+@router.get("/")
 def html_page():
-    return FileResponse(r"MER\routers\index.html")
+    return FileResponse(r"templates\index.html")
 
 
 

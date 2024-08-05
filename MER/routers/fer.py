@@ -13,7 +13,7 @@ router=APIRouter(
 templates = Jinja2Templates(directory="templates")
 
 
-@router.get('/facial-emotion')
+@router.get('')
 def index(request: Request):
     return templates.TemplateResponse(name="show_video.html",context= {"request": request})
 

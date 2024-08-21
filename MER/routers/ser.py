@@ -29,13 +29,13 @@ def recorde_audioasync(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     
-    return find_emotion()
+    return find_emotion(r"MER\services\recording.wav")
 
 
 
 @router.get("/get-text")
 def html_page():
-    return get_text() 
+    return get_text("MER/services/recording.wav") 
 
 @router.get("/")
 def html_page():

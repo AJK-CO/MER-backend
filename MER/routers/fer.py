@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
-from MER.services.vedio_services import gen_frames
+from MER.services.video_services import gen_frames
 
 router=APIRouter(
     prefix="/fer",

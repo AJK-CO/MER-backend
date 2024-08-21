@@ -7,7 +7,7 @@ import whisper
 def get_text():
 # Load model
     model = whisper.load_model("medium")
-    audio=whisper.load_audio("MER/services/recording.wav")
+    audio=whisper.load_audio()
     # Transcribe noisy audio
     result = model.transcribe(audio=audio)
     print(result["text"])

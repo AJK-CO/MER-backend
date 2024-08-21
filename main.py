@@ -7,6 +7,8 @@ from MER.routers.ser import router as ser
 
 from MER.routers.fer import router as fer
 from MER.routers.ter import router as ter
+
+from MER.routers.mer import router as mer
 import uvicorn
 
 app=FastAPI()
@@ -24,7 +26,7 @@ app.include_router(ser)
 app.include_router(fer)
 
 app.include_router(ter)
-
+app.include_router(mer)
 
 if __name__=="__main__":
     uvicorn.run("main:app",reload=True)

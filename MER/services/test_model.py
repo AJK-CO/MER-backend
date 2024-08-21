@@ -50,7 +50,7 @@ def predict_emotion(file_path, model, labels):
     predicted_label = labels[np.argmax(prediction)]
     return predicted_label
 
-def find_emotion():
+def find_emotion(audio_path):
     # Load the trained model using tf.keras
     model = tf.keras.models.load_model(r"MER\services\speech.keras")
 
@@ -58,7 +58,7 @@ def find_emotion():
     labels = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised']
 
     # Path to the audio file to be tested (adjust the path according to your file location)
-    audio_file = r"MER\services\recording.wav"
+    audio_file = audio_path
     # audio_file="MER/services/OAF_back_fear.wav"
     # Predict the emotion
     predicted_emotion = predict_emotion(audio_file, model, labels)

@@ -13,7 +13,6 @@ from MER.services.speech_to_text_whisper import get_text
 
 router=APIRouter(tags=["SER"],prefix="/ser")
 
-
 # This API is used for recording th audio of the user and save it 
 @router.post("/save-audio")
 def recorde_audioasync(file: UploadFile = File(...)):

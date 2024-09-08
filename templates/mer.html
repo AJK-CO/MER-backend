@@ -134,6 +134,9 @@
             <button id="stopButton" disabled>Stop Recording</button>
         </div>
         Facial Emotion: <div id="facial-response"></div> </br>
+        Speech Emotion: <div id="speech-response"></div> 
+        Text Emotion: <div id="text-response"></div> </br>
+        Speech to Text: <div id="speech-text"></div> 
         <div id="text"></div>
         <div class="emotion-bar" id="emotionBar"></div>
         <div class="time-slider">
@@ -203,6 +206,16 @@
                         method: 'POST',
                         body: formData,
                     });
+                } catch (error) {
+                    console.error('Error saving media:', error);
+                    document.getElementById('response').innerText = 'Error saving media.';
+                }
+
+                //try-except block for fer 
+                try {
+                    const response = await fetch('http://localhost:8000/mer/fer', {
+                        method: 'GET'
+                    });
 
                     const res = await response.json();
                     const result = JSON.parse(res);
@@ -215,8 +228,27 @@
                     displayEmotionBar(result);  // Modify display function to handle all three
 
                 } catch (error) {
-                    console.error('Error saving media:', error);
-                    document.getElementById('response').innerText = 'Error saving media.';
+                    console.error('Error predicting facial input:', error);
+                    document.getElementById('response').innerText = 'Error predicting facial input:';
+                }
+
+                //try-except block for ser 
+                try {
+                    const response = await fetch('http://localhost:8000/mer/ser_ter', {
+                        method: 'GET',
+                    });
+
+                    const result = await response.json();
+
+                    // Display the speech and text emotion recognition (SER & TER) result
+                    document.getElementById('speech-response').innerText = JSON.stringify(result.ser, null, 2);
+                    document.getElementById('text-response').innerText = JSON.stringify(result.ter, null, 2);
+                    document.getElementById('speech-text').innerText = JSON.stringify(result.text, null, 2);
+                
+
+                } catch (error) {
+                    console.error('Error finding in speech and text emotion:', error);
+                    document.getElementById('response').innerText = 'Error finding in speech and text emotion.';
                 }
 
                 mediaChunks = [];

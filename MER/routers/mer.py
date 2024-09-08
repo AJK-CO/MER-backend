@@ -14,6 +14,7 @@ import subprocess
 from MER.schema.text_input import TextRequest
 from MER.services.video_services import get_fer_emotion
 from MER.services.test_model import find_emotion
+from MER.services.speech_to_text_whisper import get_text
 
 router=APIRouter(tags=["MER"],prefix="/mer")
 
@@ -80,10 +81,22 @@ async def save_media(file: UploadFile = File(...)):
     if "Duration: 00:00:00" in audio_duration_result:
         return JSONResponse(content={"error": "Audio file is too short for processing."}, status_code=400)
     
+    return "Audio File saved successfully"
+
+@router.get("/fer")
+def get_fer_output():
     fer=get_fer_emotion()
-    ser= find_emotion("Audios/recording.wav")
-    ter=predict_text_emotion("Audios/recording.wav")
     return fer
+
+@router.get("/ser_ter")
+def get_fer_output():
+    ser= find_emotion("Audios/recording.wav")
+    text=get_text("Audios/recording.wav") 
+    ter=predict_text_emotion(text)
+    return {"ser":ser,
+            "ter":ter,
+            "text":text}
+
 @router.get("")
 def html_page():
     return FileResponse("templates/mer.html")

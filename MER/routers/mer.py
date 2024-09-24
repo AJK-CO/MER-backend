@@ -1,9 +1,5 @@
-
-
 from fastapi import APIRouter, HTTPException,Request, File, UploadFile
-
 from fastapi.responses import FileResponse
-
 from fastapi.responses import FileResponse
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -15,6 +11,8 @@ from MER.schema.text_input import TextRequest
 from MER.services.video_services import get_fer_emotion
 from MER.services.test_model import find_emotion
 from MER.services.speech_to_text_whisper import get_text
+from MER.services.mer_new_services import predict_mer
+
 
 router=APIRouter(tags=["MER"],prefix="/mer")
 
@@ -83,19 +81,29 @@ async def save_media(file: UploadFile = File(...)):
     
     return "Audio File saved successfully"
 
+fer=ser=mer=ter=""
+
 @router.get("/fer")
 def get_fer_output():
     fer=get_fer_emotion()
     return fer
 
-@router.get("/ser_ter")
+@router.get("/mer")
 def get_fer_output():
+    mer=predict_mer(facial_emotion=fer,speech_emotion=ser,text_emotion=ter)
+    return {
+        "mer":mer
+    }
+
+@router.get("/ser_ter")
+def get_ser_output():
     ser= find_emotion("Audios/recording.wav")
     text=get_text("Audios/recording.wav") 
     ter=predict_text_emotion(text)
     return {"ser":ser,
             "ter":ter,
-            "text":text}
+            "text":text
+            }
 
 @router.get("")
 def html_page():

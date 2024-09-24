@@ -136,6 +136,7 @@
         Facial Emotion: <div id="facial-response"></div> </br>
         Speech Emotion: <div id="speech-response"></div> 
         Text Emotion: <div id="text-response"></div> </br>
+        MER Emotion: <div id="mer-response"></div> </br>
         Speech to Text: <div id="speech-text"></div> 
         <div id="text"></div>
         <div class="emotion-bar" id="emotionBar"></div>
@@ -245,6 +246,21 @@
                     document.getElementById('text-response').innerText = JSON.stringify(result.ter, null, 2);
                     document.getElementById('speech-text').innerText = JSON.stringify(result.text, null, 2);
                 
+
+                } catch (error) {
+                    console.error('Error finding in speech and text emotion:', error);
+                    document.getElementById('response').innerText = 'Error finding in speech and text emotion.';
+                }
+
+                try {
+                    const response = await fetch('http://localhost:8000/mer/mer', {
+                        method: 'GET',
+                    });
+
+                    const result = await response.json();
+
+                    // Display the speech and text emotion recognition (SER & TER) result
+                    document.getElementById('mer-response').innerText = JSON.stringify(result.mer, null, 2);
 
                 } catch (error) {
                     console.error('Error finding in speech and text emotion:', error);

@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from tensorflow.keras.models import load_model
 from test_model import find_emotion
 from video_services import get_fer_emotion
@@ -18,10 +19,10 @@ def emotion_to_vector(emotion, labels):
 
 # Preprocess the input data
 facial_emotion = json.loads(get_fer_emotion())
-text = get_text("Audios/recording.wav") 
+text = get_text(os.path.join("Audios","recording.wav")) 
 
 # Speech model prediction
-speech_prediction = find_emotion("Audios/recording.wav")
+speech_prediction = find_emotion(os.path.join("Audios","recording.wav"))
 
 # Text model prediction
 text_prediction = predict_text_emotion(text)
@@ -47,7 +48,7 @@ print(f"Speech Prediction Shape: {speech_prediction.shape}")
 print(f"Text Prediction Shape: {text_prediction.shape}")
 
 # Load the fusion model and make the final prediction
-fusion_model = load_model(r'C:\Users\16307\Desktop\term\MER-backend\MER\services\multimodal_fusion_model.h5')
+fusion_model = load_model(os.path.join("MER", "services","multimodal_fusion_model.h5"))
 
 # Pass the inputs separately to the fusion model
 final_prediction = fusion_model.predict([facial_prediction, speech_prediction, text_prediction])

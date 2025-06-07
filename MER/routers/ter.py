@@ -20,7 +20,7 @@ def get_text(input: TextRequest):
 
 @router.get("")
 def html_page():
-    return FileResponse(r"templates\ter.html")
+    return FileResponse(os.path.join("templates", "ter.html"))
 
 
 

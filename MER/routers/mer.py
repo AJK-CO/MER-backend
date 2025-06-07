@@ -97,8 +97,8 @@ def get_fer_output():
 
 @router.get("/ser_ter")
 def get_ser_output():
-    ser= find_emotion("Audios/recording.wav")
-    text=get_text("Audios/recording.wav") 
+    ser= find_emotion(os.path.join("Audios", "recording.wav"))
+    text=get_text(os.path.join("Audios", "recording.wav")) 
     ter=predict_text_emotion(text)
     return {"ser":ser,
             "ter":ter,
@@ -107,7 +107,7 @@ def get_ser_output():
 
 @router.get("")
 def html_page():
-    return FileResponse("templates/mer.html")
+    return FileResponse(os.path.join("templates", "mer.html"))
 
 
 

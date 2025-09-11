@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio & Video Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #8e2de2, #4a00e0);
+            color: #fff;
+        }
+        
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+        
+        video, audio {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        button#startButton {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        button#stopButton {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .emotion-bar {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 50px;
+            margin-top: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .emotion-bar div {
+            height: 100%;
+            position: absolute;
+        }
+
+        .emotion-bar .neutral { background: rgba(128, 128, 128, 0.5); }
+        .emotion-bar .happy { background: rgba(0, 255, 0, 0.5); }
+        .emotion-bar .sad { background: rgba(255, 0, 0, 0.5); }
+        .emotion-bar .angry { background: rgba(255, 0, 0, 0.5); }
+        .emotion-bar .surprise { background: rgba(255, 255, 0, 0.5); }
+        .emotion-bar .fear { background: rgba(255, 0, 255, 0.5); }
+        .emotion-bar .disgust { background: rgba(0, 255, 255, 0.5); }
+
+        .time-slider {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        .time-slider input {
+            width: 100%;
+        }
+
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend div {
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .legend span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .neutral { background: #808080; }
+        .happy { background: #00ff00; }
+        .sad { background: #ff0000; }
+        .angry { background: #ff0000; }
+        .surprise { background: #ffff00; }
+        .fear { background: #ff00ff; }
+        .disgust { background: #00ffff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Record Video and Audio</h1>
+        <video id="videoPlayback" autoplay muted></video>
+        <audio id="audioPlayback" controls style="display:none;"></audio>
+        <div class="controls">
+            <button id="startButton">Start Recording</button>
+            <button id="stopButton" disabled>Stop Recording</button>
+        </div>
+        Facial Emotion: <div id="facial-response"></div> </br>
+        Speech Emotion: <div id="speech-response"></div> 
+        Text Emotion: <div id="text-response"></div> </br>
+        MER Emotion: <div id="mer-response"></div> </br>
+        Speech to Text: <div id="speech-text"></div> 
+        <div id="text"></div>
+        <div class="emotion-bar" id="emotionBar"></div>
+        <div class="time-slider">
+            <input type="range" id="timeRange" min="0" value="0" step="0.1" />
+        </div>
+        <div class="legend" id="legend"></div>
+    </div>
+    <script type="module">
+        let mediaRecorder;
+        let mediaChunks = [];
+        let stream;
+
+        document.getElementById('startButton').addEventListener('click', startRecording);
+        document.getElementById('stopButton').addEventListener('click', stopRecording);
+        document.getElementById('timeRange').addEventListener('input', updateFrame);
+
+        async function startRecording() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                
+                const videoElement = document.getElementById('videoPlayback');
+                videoElement.srcObject = stream;
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data && event.data.size > 0) {
+                        mediaChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.start();
+
+                document.getElementById('startButton').disabled = true;
+                document.getElementById('stopButton').disabled = false;
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                document.getElementById('response').innerText = 'Error accessing media devices.';
+            }
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            stream.getTracks().forEach(track => track.stop());
+
+            mediaRecorder.onstop = async () => {
+                const mediaBlob = new Blob(mediaChunks, { type: 'video/webm' });
+                const mediaUrl = URL.createObjectURL(mediaBlob);
+
+                const videoElement = document.getElementById('videoPlayback');
+                videoElement.srcObject = null;
+                videoElement.src = mediaUrl;
+                videoElement.controls = true;
+
+                const audioBlob = new Blob(mediaChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                const audioElement = document.getElementById('audioPlayback');
+                audioElement.src = audioUrl;
+                audioElement.style.display = 'block';
+
+                const formData = new FormData();
+                formData.append('file', mediaBlob, 'recording.webm');
+
+                try {
+                    const response = await fetch('http://localhost:8000/mer/save-media', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                } catch (error) {
+                    console.error('Error saving media:', error);
+                    document.getElementById('response').innerText = 'Error saving media.';
+                }
+
+                //try-except block for fer 
+                try {
+                    const response = await fetch('http://localhost:8000/mer/fer', {
+                        method: 'GET'
+                    });
+
+                    const res = await response.json();
+                    const result = JSON.parse(res);
+
+                    // Display the facial emotion recognition (FER) result
+                    document.getElementById('facial-response').innerText = JSON.stringify(result.average_emotion, null, 2);
+
+                    
+                    // Display the emotion bar (using any combined or specific results, adjust as needed)
+                    displayEmotionBar(result);  // Modify display function to handle all three
+
+                } catch (error) {
+                    console.error('Error predicting facial input:', error);
+                    document.getElementById('response').innerText = 'Error predicting facial input:';
+                }
+
+                //try-except block for ser 
+                try {
+                    const response = await fetch('http://localhost:8000/mer/ser_ter', {
+                        method: 'GET',
+                    });
+
+                    const result = await response.json();
+
+                    // Display the speech and text emotion recognition (SER & TER) result
+                    document.getElementById('speech-response').innerText = JSON.stringify(result.ser, null, 2);
+                    document.getElementById('text-response').innerText = JSON.stringify(result.ter, null, 2);
+                    document.getElementById('speech-text').innerText = JSON.stringify(result.text, null, 2);
+                
+
+                } catch (error) {
+                    console.error('Error finding in speech and text emotion:', error);
+                    document.getElementById('response').innerText = 'Error finding in speech and text emotion.';
+                }
+
+                try {
+                    const response = await fetch('http://localhost:8000/mer/mer', {
+                        method: 'GET',
+                    });
+
+                    const result = await response.json();
+
+                    // Display the speech and text emotion recognition (SER & TER) result
+                    document.getElementById('mer-response').innerText = JSON.stringify(result.mer, null, 2);
+
+                } catch (error) {
+                    console.error('Error finding in speech and text emotion:', error);
+                    document.getElementById('response').innerText = 'Error finding in speech and text emotion.';
+                }
+
+                mediaChunks = [];
+                document.getElementById('startButton').disabled = false;
+                document.getElementById('stopButton').disabled = true;
+            };
+        }
+        function updateFrame(event) {
+    const currentTime = parseFloat(event.target.value);
+    const videoElement = document.getElementById('videoPlayback');
+    videoElement.currentTime = currentTime;
+
+    // Display current emotion based on the slider's position
+    let currentEmotion = 'Neutral';
+    for (const { time, emotion } of frameEmotions) {
+        if (time <= currentTime) {
+            currentEmotion = emotion;
+        } else {
+            break; // Break early for efficiency
+        }
+    }
+    
+    document.getElementById('text').innerText = `Current Emotion: ${currentEmotion}`;
+    
+    // Update emotion bar
+    const bars = document.querySelectorAll('#emotionBar div');
+    bars.forEach(bar => {
+        const start = parseFloat(bar.style.left);
+        const end = start + parseFloat(bar.style.width);
+        const barTime = (start / 100) * timeRange.max;
+        const barEndTime = (end / 100) * timeRange.max;
+
+        if (currentTime >= barTime && currentTime <= barEndTime) {
+            bar.style.border = '2px solid black'; // Highlight the bar
+        } else {
+            bar.style.border = 'none'; // Remove highlight
+        }
+    });
+}
+
+        function displayEmotionBar(result) {
+            const emotionBar = document.getElementById('emotionBar');
+            const timeRange = document.getElementById('timeRange');
+            const legend = document.getElementById('legend');
+            const totalFrames = result.total_frames;
+            const frameEmotions = result.frame_emotions;
+
+            emotionBar.innerHTML = ''; // Clear existing bars
+            timeRange.max = frameEmotions[frameEmotions.length - 1].time; // Set max value of range input
+
+            // Generate legend
+            const emotions = ['neutral', 'happy', 'sad', 'angry', 'surprise', 'fear', 'disgust'];
+            legend.innerHTML = '';
+            emotions.forEach(emotion => {
+                const legendItem = document.createElement('div');
+                const colorBox = document.createElement('span');
+                colorBox.className = emotion;
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(document.createTextNode(emotion.charAt(0).toUpperCase() + emotion.slice(1)));
+                legend.appendChild(legendItem);
+            });
+
+            let lastTime = 0;
+
+            frameEmotions.forEach(({ time, emotion }) => {
+                const start = (lastTime / timeRange.max) * 100;
+                const end = (time / timeRange.max) * 100;
+
+                const div = document.createElement('div');
+                div.style.left = `${start}%`;
+                div.style.width = `${end - start}%`;
+                div.className = emotion.toLowerCase();
+                emotionBar.appendChild(div);
+
+                lastTime = time;
+            });
+
+            document.getElementById('timeRange').addEventListener('input', updateFrame);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        audio {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #333;
+            max-width: 600px;
+            display: inline-block;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Recorder</h1>
+    <button id="recordButton">Record</button>
+    <button id="stopButton" disabled>Stop</button>
+    <audio id="audioPlayback" controls></audio></br>
+    <div id="response"></div></br>
+    <div id="text"></div>
+
+    <!-- Include the extendable-media-recorder library -->
+    <script type="module">
+        import { MediaRecorder, register } from 'https://cdn.skypack.dev/extendable-media-recorder';
+        import { connect } from 'https://cdn.skypack.dev/extendable-media-recorder-wav-encoder';
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Register the WAV encoder
+        async function initialize() {
+            try {
+                await register(await connect());
+            } catch (error) {
+                console.error('Failed to initialize encoder:', error);
+            }
+        }
+
+        initialize();
+
+        // Starts recording audio
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioChunks = [];
+                
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    // Set the audio URL to the audio element for playback
+                    document.getElementById('audioPlayback').src = audioUrl;
+
+                    // Prepare to send the audio data to the server
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, 'recording.wav');
+
+                    try {
+                        const response = await fetch('http://localhost:8000/ser/save-audio', {
+                            method: 'POST',
+                            body: formData,
+                        });
+                        
+                        const result = await response.json();
+                        // Display the response
+                        document.getElementById('response').innerText = JSON.stringify(result, null, 2);
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        document.getElementById('response').innerText = 'An error occurred while sending the audio.';
+                    }
+
+                    try {
+                        const response = await fetch('http://localhost:8000/ser/get-text', {
+                            method: 'GET'
+                        });
+                        
+                        const result = await response.json();
+                        // Display the response
+                        document.getElementById('text').innerText = JSON.stringify(result, null, 2);
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        document.getElementById('response').innerText = 'An error occurred while sending the audio.';
+                    }
+
+                    audioChunks = [];
+                    stream.getTracks().forEach(track => track.stop()); // Stop all tracks to release the stream
+                };
+
+                mediaRecorder.start();
+
+                document.getElementById('recordButton').disabled = true;
+                document.getElementById('stopButton').disabled = false;
+            } catch (error) {
+                console.error('Error accessing audio stream:', error);
+                document.getElementById('response').innerText = 'An error occurred while accessing the audio stream.';
+            }
+        }
+
+        // Stops recording audio
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+            }
+            document.getElementById('recordButton').disabled = false;
+            document.getElementById('stopButton').disabled = true;
+        }
+
+        document.getElementById('recordButton').onclick = startRecording;
+        document.getElementById('stopButton').onclick = stopRecording;
+    </script>
+</body>
+</html>
